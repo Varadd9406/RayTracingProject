@@ -27,7 +27,7 @@ color ray_color(const ray& r,const hittable& world,int depth)
 	}
 	vec3 unit_direction = unit_vector(r.direction());
 	double t=  0.5*(unit_direction.y()+1.0);
-    return (1.0-t)*color(1.0, 1.0, 1.0) + t*color(0.5, 0.7, 1.0);
+    return (1.0-t)*color(1.0, 1.0, 1.0) + t*color(0.5, 0.7, 1);
 }
 
 
@@ -40,24 +40,24 @@ int main()
     //Image
 
 	double aspect_ratio = 16.0/9.0;
-    const int image_height =1080;
+    const int image_height =720;
 	const int image_width = image_height*aspect_ratio;
-	const int samples_per_pixel = 10;
-	const int max_depth = 20;
+	const int samples_per_pixel = 100;
+	const int max_depth = 40;
 	// std::cerr<< aspect_ratio <<" "<<image_width;
 
 	//World
 	hittable_list world;
 	std::shared_ptr<lambertian> material_ground =  std::make_shared<lambertian>(color(0.8,0.8,0));
 	std::shared_ptr<lambertian> material_middle =  std::make_shared<lambertian>(color(0.7, 0.3, 0.3));
-	std::shared_ptr<metal> material_left =  std::make_shared<metal>(color(0.8,0.8,0.8));
-	std::shared_ptr<metal> material_right =  std::make_shared<metal>(color(0.8,0.6,0.2));
+	std::shared_ptr<metal> material_left =  std::make_shared<metal>(color(0.8,0.8,0.8),0.1);
+	std::shared_ptr<metal> material_right =  std::make_shared<metal>(color(0.8,0.8,0.8),1);
 
 
- 	world.add(make_shared<sphere>(point3( 0.0, -100.5, -1.0), 100.0, material_ground));
-    world.add(make_shared<sphere>(point3( 0.0,    0.0, -1.0),   0.5, material_middle));
-    world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.5, material_left));
-    world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
+ 	world.add(std::make_shared<sphere>(point3( 0.0, -100.5, -1.0), 100.0, material_ground));
+    world.add(std::make_shared<sphere>(point3( 0.0,    0.0, -1.0),   0.5, material_middle));
+    world.add(std::make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.5, material_left));
+    world.add(std::make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
 	
 	//Camera
 	camera cam;

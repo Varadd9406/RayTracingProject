@@ -4,8 +4,7 @@
 #include "utility.hpp"
 #include "ray.hpp"
 #include "hittable.hpp"
-
-
+#include <algorithm>
 
 struct hit_record;
 
@@ -17,7 +16,7 @@ class material
 };
 
 
-class lambertian:public material
+class lambertian : public material
 {
 	public:
 	lambertian(const color& a):albedo(a){}
@@ -39,19 +38,20 @@ class lambertian:public material
 class metal : public material
 {
     public:
-        metal(const color& a) : albedo(a) {}
+	metal(const color& a,double f) : albedo(a),fuzz(std::min(1.0,f)) {}
 
-        virtual bool scatter(
-            const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
-        ) const override
-		{
-            vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
-            scattered = ray(rec.p, reflected);
-            attenuation = albedo;
-            return (dot(scattered.direction(), rec.normal) > 0);
-        }
+	virtual bool scatter(
+		const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
+	) const override
+	{
+		vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
+		scattered = ray(rec.p, reflected+fuzz*random_in_unit_sphere());
+		attenuation = albedo;
+		return (dot(scattered.direction(), rec.normal) > 0);
+	}
 
     public:
-        color albedo;
+	color albedo;
+	double fuzz;
 };
 #endif
