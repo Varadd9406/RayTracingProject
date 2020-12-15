@@ -31,6 +31,7 @@ color ray_color(const ray& r,const hittable& world,int depth)
 }
 
 
+
 int main() 
 {
 	#ifndef IMAGE
@@ -42,25 +43,54 @@ int main()
 	double aspect_ratio = 16.0/9.0;
     const int image_height =720;
 	const int image_width = image_height*aspect_ratio;
-	const int samples_per_pixel = 100;
-	const int max_depth = 40;
+	const int samples_per_pixel = 50;
+	const int max_depth = 20;
 	// std::cerr<< aspect_ratio <<" "<<image_width;
 
 	//World
 	hittable_list world;
-	std::shared_ptr<lambertian> material_ground =  std::make_shared<lambertian>(color(0.8,0.8,0));
-	std::shared_ptr<lambertian> material_middle =  std::make_shared<lambertian>(color(0.7, 0.3, 0.3));
-	std::shared_ptr<metal> material_left =  std::make_shared<metal>(color(0.8,0.8,0.8),0.1);
-	std::shared_ptr<metal> material_right =  std::make_shared<metal>(color(0.8,0.8,0.8),1);
+	auto ground_material = std::make_shared<lambertian>(color(0.5, 0.5, 0.5));
+    world.add(std::make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
 
+    for (int a = -11; a < 11; a++) {
+        for (int b = -11; b < 11; b++) {
+            auto choose_mat = random_double();
+            point3 center(a + 0.9*random_double(), 0.2, b + 0.9*random_double());
 
- 	world.add(std::make_shared<sphere>(point3( 0.0, -100.5, -1.0), 100.0, material_ground));
-    world.add(std::make_shared<sphere>(point3( 0.0,    0.0, -1.0),   0.5, material_middle));
-    world.add(std::make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.5, material_left));
-    world.add(std::make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
+            if ((center - point3(4, 0.2, 0)).length() > 0.9) {
+                std::shared_ptr<material> sphere_material;
+
+                if (choose_mat < 0.8) {
+                    // diffuse
+                    auto albedo = color::random() * color::random();
+                    sphere_material = std::make_shared<lambertian>(albedo);
+                    world.add(std::make_shared<sphere>(center, 0.2, sphere_material));
+                } else if (choose_mat < 0.95) {
+                    // metal
+                    auto albedo = color::random(0.5, 1);
+                    auto fuzz = random_double(0, 0.5);
+                    sphere_material = std::make_shared<metal>(albedo, fuzz);
+                    world.add(std::make_shared<sphere>(center, 0.2, sphere_material));
+                } else {
+                    // glass
+                    sphere_material = std::make_shared<dielectric>(1.5);
+                    world.add(std::make_shared<sphere>(center, 0.2, sphere_material));
+                }
+            }
+        }
+    }
+
+    auto material1 = std::make_shared<dielectric>(1.5);
+    world.add(std::make_shared<sphere>(point3(0, 1, 0), 1.0, material1));
+
+    auto material2 = std::make_shared<lambertian>(color(0.4, 0.2, 0.1));
+    world.add(std::make_shared<sphere>(point3(-4, 1, 0), 1.0, material2));
+
+    auto material3 = std::make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
+    world.add(std::make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
 	
 	//Camera
-	camera cam(point3(-2,2,1), point3(0,0,-1), vec3(0,1,0),90,aspect_ratio);
+	camera cam(point3(5,2,3), point3(0,0,0), vec3(0,1,0),90,aspect_ratio);
 
 
     // Render
