@@ -30,6 +30,19 @@ color ray_color(const ray& r,const hittable& world,int depth)
     return (1.0-t)*color(1.0, 1.0, 1.0) + t*color(0.5, 0.7, 1);
 }
 
+void process(int i,int j,int samples_per_pixel,int image_width,int image_height,camera& cam,hittable_list& world,int max_depth)
+{
+	color pixel_color(0,0,0);
+		for (int s = 0;s<samples_per_pixel;s++)
+		{
+			double u = double(i+random_double())/(image_width-1);
+			double v = double(j+random_double())/(image_height-1);
+			ray r = cam.get_ray(u, v);
+			pixel_color += ray_color(r, world,max_depth);
+		}
+	write_color(pixel_color,samples_per_pixel);
+}
+
 
 
 int main() 
@@ -41,10 +54,10 @@ int main()
     //Image
 
 	double aspect_ratio = 16.0/9.0;
-    const int image_height =720;
+    const int image_height =200;
 	const int image_width = image_height*aspect_ratio;
-	const int samples_per_pixel = 50;
-	const int max_depth = 20;
+	const int samples_per_pixel = 100;
+	const int max_depth = 50;
 	// std::cerr<< aspect_ratio <<" "<<image_width;
 
 	//World
@@ -90,9 +103,15 @@ int main()
     world.add(std::make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
 	
 	//Camera
-	camera cam(point3(5,2,3), point3(0,0,0), vec3(0,1,0),90,aspect_ratio);
+	point3 lookfrom(13,2,3);
+    point3 lookat(0,0,0);
+    vec3 vup(0,1,0);
+    auto dist_to_focus = 10.0;
+    auto aperture = 0.1;
+    camera cam(lookfrom, lookat, vup, 90, aspect_ratio, aperture, dist_to_focus);
 
-
+	// Thread Pool
+	// ctpl::thread_pool p(11);
     // Render
     std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
@@ -100,15 +119,7 @@ int main()
 	{
 		for (int i = 0; i < image_width; i++)
 		{
-			color pixel_color(0,0,0);
-			for (int s = 0;s<samples_per_pixel;s++)
-			{
-				double u = double(i+random_double())/(image_width-1);
-				double v = double(j+random_double())/(image_height-1);
-				ray r = cam.get_ray(u, v);
-				pixel_color += ray_color(r, world,max_depth);
-			}
-			write_color(pixel_color,samples_per_pixel);
+			process(i,j,samples_per_pixel,image_width,image_height,cam,world,max_depth);
 			
 		}
 	}
